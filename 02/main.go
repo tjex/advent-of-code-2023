@@ -92,31 +92,33 @@ func regexSol() {
 		b := strings.TrimSpace(digitAsStringArray[len(digitAsStringArray)-1])
 
 		firstNumeral, err := strconv.Atoi(a)
+		aChecked = firstNumeral
 		if err != nil {
 			aChecked = stringInt[a]
-		} else {
-			aChecked = firstNumeral
 		}
+
 		lastNumeral, err := strconv.Atoi(b)
+		bChecked = lastNumeral
 		if err != nil {
 			bChecked = stringInt[b]
-		} else {
-			bChecked = lastNumeral
 		}
-		doubleDig := aChecked*10 + bChecked
 
 		if len(digitAsStringArray) > 1 {
+			// fmt.Println(aChecked, bChecked)
+			doubleDig := aChecked*10 + bChecked
 			answer += doubleDig
 		} else {
+			fmt.Println(scanner.Text())
+			fmt.Println(aChecked, bChecked)
 			answer += aChecked
-
 		}
 
 		// fmt.Println(reflect.TypeOf(digitAsStringArray[0]),  reflect.TypeOf(digitAsStringArray[len(digitAsStringArray)-1]))
+		// fmt.Println(scanner.Text())
 		// fmt.Println("length", len(digitAsStringArray))
+		// fmt.Println(aChecked, bChecked)
 		// fmt.Printf("first as string %q\n", a)
 		// fmt.Printf("second as string %q\n", b)
-		//       fmt.Println(scanner.Text())
 		// fmt.Println("dig", aChecked, bChecked)
 		// fmt.Println(doubleDig)
 		//       fmt.Println("running total", answer)

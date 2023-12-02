@@ -1,0 +1,16 @@
+buggy regexing. 
+
+string: vnxknklscmhjrxnzbp9qzfiveeight
+aChecked, bCheceked: 9 9
+
+xq1eight
+1 1
+
+xlfdr1fivelfxvnjpz
+1 1
+
+fivekfvsxdstm8
+8 8
+
+
+

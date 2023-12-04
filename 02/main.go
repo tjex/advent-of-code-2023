@@ -13,6 +13,9 @@ type Game struct {
 }
 
 var gameData []string
+var redCountPerGame []string
+var greenCountPerGame []string
+var blueCountPerGame []string
 
 const gmeIdPat = `(\d*:)`
 const redCountPat = `(\d*\ red)`
@@ -31,16 +34,16 @@ func main() {
 		gameData = append(gameData, sc.Text())
 	}
 
-    ids, redMax, greenMax, blueMax := getGameData(gameData)
+	ids, redMax, greenMax, blueMax := getGameData(gameData)
 
 	// generate structs
 	answer := 0
 	for i := range ids {
 		game := generateStruct(ids[i], redMax[i], greenMax[i], blueMax[i])
-		// fmt.Println(game)
 		// check if game was possible
-		if game.red <= 12 && game.blue <= 14 && game.green <= 13 {
+		if game.red <= 12 && game.green <= 13 && game.blue <= 14 {
 			answer += game.id
+			fmt.Println(game.id)
 		}
 	}
 	fmt.Println(answer)
@@ -53,15 +56,16 @@ func generateStruct(id, redCount, greenCount, blueCount int) Game {
 	return gameStruct
 }
 
-func findMax(arr []int) int {
-	if len(arr) == 0 {
-		return -1
-	}
-
-	max := arr[0]
-	for i := 1; i < len(arr); i++ {
-		if arr[i] > max {
-			max = arr[i]
+func getLargestNumber(game []string, r *regexp.Regexp) int {
+	max := 0
+	for _, num := range game {
+		n := r.FindAllString(num, -1)
+		nAsInt, err := strconv.Atoi(n[0])
+		if err != nil {
+			fmt.Println(err)
+		}
+		if nAsInt > max {
+			max = nAsInt
 		}
 	}
 	return max
@@ -71,6 +75,7 @@ func getGameData(gameData []string) ([]int, []int, []int, []int) {
 	reRed := regexp.MustCompile(redCountPat)
 	reGreen := regexp.MustCompile(greenCountPat)
 	reBlue := regexp.MustCompile(blueCountPat)
+	reID := regexp.MustCompile(`(\d*:)`)
 	digit := regexp.MustCompile(`\d*`)
 
 	var redCounts []int
@@ -78,11 +83,17 @@ func getGameData(gameData []string) ([]int, []int, []int, []int) {
 	var blueCounts []int
 	var gameStructIDs []int
 
-	var redCountPerGame []string
-
-	for i, line := range gameData {
+	for _, line := range gameData {
 		// n := fmt.Sprintf("%s", "game"+strconv.Itoa(i+1))
-		gameStructIDs = append(gameStructIDs, i+1)
+		id := reID.FindString(line)
+		id = digit.FindString(id)
+		if id != "" {
+			idInt, err := strconv.Atoi(id)
+			if err != nil {
+				fmt.Println(err)
+			}
+			gameStructIDs = append(gameStructIDs, idInt)
+		}
 
 		// find color counts
 		redCountPerGame = reRed.FindAllString(line, -1)
@@ -90,48 +101,14 @@ func getGameData(gameData []string) ([]int, []int, []int, []int) {
 		blueCountPerGame := reBlue.FindAllString(line, -1)
 
 		// accumulate counts across all games
-		// for red
-		maxRed := 0
-		for _, num := range redCountPerGame {
-			n := digit.FindAllString(num, -1)
-			nAsInt, err := strconv.Atoi(n[0])
-			if err != nil {
-				fmt.Println(err)
-			}
-			if nAsInt > maxRed {
-				maxRed = nAsInt
-			}
-		}
-		redCounts = append(redCounts, maxRed)
+		redMax := getLargestNumber(redCountPerGame, digit)
+		redCounts = append(redCounts, redMax)
 
-		// for green
-		maxGreen := 0
-		for _, count := range greenCountPerGame {
-			n := digit.FindAllString(count, -1)
-			nAsInt, err := strconv.Atoi(n[0])
-			if err != nil {
-				fmt.Println(err)
-			}
-			if nAsInt > maxGreen {
-				maxGreen = nAsInt
-			}
+		greenMax := getLargestNumber(greenCountPerGame, digit)
+		greenCounts = append(greenCounts, greenMax)
 
-		}
-		greenCounts = append(greenCounts, maxRed)
-
-		// for "blue"
-		maxBlue := 0
-		for _, count := range blueCountPerGame {
-			n := digit.FindAllString(count, -1)
-			nAsInt, err := strconv.Atoi(n[0])
-			if err != nil {
-				fmt.Println(err)
-			}
-			if nAsInt > maxBlue {
-				maxBlue = nAsInt
-			}
-		}
-		blueCounts = append(blueCounts, maxGreen)
+		blueMax := getLargestNumber(blueCountPerGame, digit)
+		blueCounts = append(blueCounts, blueMax)
 
 	}
 

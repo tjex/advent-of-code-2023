@@ -57,73 +57,67 @@ func regexSol() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	stringInt := map[string]int{
-		"zero":  0,
-		"one":   1,
-		"two":   2,
-		"three": 3,
-		"four":  4,
-		"five":  5,
-		"six":   6,
-		"seven": 7,
-		"eight": 8,
-		"nine":  9,
+	intNameToString := map[string]string{
+		"zero":  "0",
+		"one":   "1",
+		"two":   "2",
+		"three": "3",
+		"four":  "4",
+		"five":  "5",
+		"six":   "6",
+		"seven": "7",
+		"eight": "8",
+		"nine":  "9",
 	}
 	scanner := bufio.NewScanner(file)
 
 	var answer int
-	var aChecked, bChecked int
 
-	const pattern = `((one)|(two)|(three)|(four)|
-            (five)|(six)|(seven)|(eight)
-            |(nine)|(zero)
-            |(1)|(2)|(3)|(4)|(5)|(6)|(7)|(8)|(9)|(0))`
-	digitAsStringArray := []string{}
+	const pattern = `^(\d|one|two|three|four|five|six|seven|eight|nine)`
 	r := regexp.MustCompile(pattern)
+	currentLine := []string{}
+	inputArray := []string{}
 
 	for scanner.Scan() {
-		digitAsStringArray = nil
-		matches := r.FindAllStringSubmatch(scanner.Text(), -1)
-		for _, v := range matches {
-			digitAsStringArray = append(digitAsStringArray, v[1])
-		}
-		// fmt.Println()
-		a := strings.TrimSpace(digitAsStringArray[0])
-		b := strings.TrimSpace(digitAsStringArray[len(digitAsStringArray)-1])
-
-		firstNumeral, err := strconv.Atoi(a)
-		aChecked = firstNumeral
-		if err != nil {
-			aChecked = stringInt[a]
-		}
-
-		lastNumeral, err := strconv.Atoi(b)
-		bChecked = lastNumeral
-		if err != nil {
-			bChecked = stringInt[b]
-		}
-
-		if len(digitAsStringArray) > 1 {
-			// fmt.Println(aChecked, bChecked)
-			doubleDig := aChecked*10 + bChecked
-			answer += doubleDig
-		} else {
-			fmt.Println(scanner.Text())
-			fmt.Println(aChecked, bChecked)
-			answer += aChecked
-		}
-
-		// fmt.Println(reflect.TypeOf(digitAsStringArray[0]),  reflect.TypeOf(digitAsStringArray[len(digitAsStringArray)-1]))
-		// fmt.Println(scanner.Text())
-		// fmt.Println("length", len(digitAsStringArray))
-		// fmt.Println(aChecked, bChecked)
-		// fmt.Printf("first as string %q\n", a)
-		// fmt.Printf("second as string %q\n", b)
-		// fmt.Println("dig", aChecked, bChecked)
-		// fmt.Println(doubleDig)
-		//       fmt.Println("running total", answer)
-		// fmt.Println()
+		inputArray = append(inputArray, scanner.Text())
 	}
+	for _, line := range inputArray {
+		currentLine = nil
+		for i := range line {
+			match := r.FindString(line[i:])
+			if match != "" {
+				currentLine = append(currentLine, match)
+			}
+
+			// fmt.Println(currentLine)
+		}
+
+		for i, word := range currentLine {
+			_, err := strconv.Atoi(word)
+			if err != nil {
+				currentLine[i] = intNameToString[word]
+			}
+		}
+		a := strings.TrimSpace(currentLine[0])
+		b := strings.TrimSpace(currentLine[len(currentLine)-1])
+
+		doubleDig := fmt.Sprintf("%s%s", a, b)
+
+		num, _ := strconv.Atoi(doubleDig)
+		// fmt.Println("digit:", num)
+		// fmt.Println()
+		answer += num
+	}
+
+	// fmt.Println(reflect.TypeOf(currentLine[0]),  reflect.TypeOf(currentLine[len(currentLine)-1]))
+	// fmt.Println(scanner.Text())
+	// fmt.Println("length", len(currentLine))
+	// fmt.Println(aChecked, bChecked)
+	// fmt.Printf("first as string %q\n", a)
+	// fmt.Printf("second as string %q\n", b)
+	// fmt.Println(doubleDig)
+	//       fmt.Println("running total", answer)
+	// fmt.Println()
 	fmt.Println(answer)
 }
 

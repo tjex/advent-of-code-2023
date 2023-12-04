@@ -33,3 +33,20 @@ Which games would have been possible if the bag contained **only 12 red cubes, 1
 blue cubes?**
 
 Add the ids of each game that would be possible given this requirement.
+
+### Tactic
+
+- make a struct for a game
+    - id (int)
+    - red (int) - total cubes revealed for the game
+    - green (int) - //
+    - blue (int) - //
+
+- iterate through the input and generate structs for each game
+- filter the structs based on requirements
+    - 12 red
+    - 13 green
+    - 14 blue
+
+- return the ids of the filtered games
+- sum the returned ids (ints)

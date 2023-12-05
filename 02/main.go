@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -10,6 +11,10 @@ import (
 
 type Game struct {
 	id, red, green, blue int
+}
+
+type ColorResultPerGame struct {
+	red, green, blue []int
 }
 
 var gameData []string
@@ -34,23 +39,43 @@ func main() {
 		gameData = append(gameData, sc.Text())
 	}
 
-	ids, redMax, greenMax, blueMax := getGameData(gameData)
+	ids, countsMax, _ := getGameData(gameData)
+	redMax := countsMax.red
+	greenMax := countsMax.green
+	blueMax := countsMax.blue
 
-	// generate structs
+	partOne(ids, redMax, greenMax, blueMax)
+	partTwo(ids, redMax, greenMax, blueMax)
+
+}
+
+func partOne(ids, redMax, greenMax, blueMax []int) {
 	answer := 0
 	for i := range ids {
 		game := generateStruct(ids[i], redMax[i], greenMax[i], blueMax[i])
 		// check if game was possible
 		if game.red <= 12 && game.green <= 13 && game.blue <= 14 {
 			answer += game.id
-			fmt.Println(game.id)
 		}
 	}
-	fmt.Println(answer)
+	fmt.Println("part 1:", answer)
+}
+
+func partTwo(ids, redMax, greenMax, blueMax []int) {
+	answer := 0
+	for i := range ids {
+		game := generateStruct(ids[i], redMax[i], greenMax[i], blueMax[i])
+
+        // fmt.Println(game.red, game.green, game.blue)
+        // multiply lowest number of each color together
+        power := game.red * game.green * game.blue
+        answer += power
+	}
+	fmt.Println("part 2:", answer)
 
 }
 
-// generate a struct for each line in input game data
+// generate a struct for each game
 func generateStruct(id, redCount, greenCount, blueCount int) Game {
 	gameStruct := Game{id, redCount, greenCount, blueCount}
 	return gameStruct
@@ -71,57 +96,90 @@ func getLargestNumber(game []string, r *regexp.Regexp) int {
 	return max
 }
 
-func getGameData(gameData []string) ([]int, []int, []int, []int) {
+func getSmallestNumber(game []string, r *regexp.Regexp) int {
+	min := math.MaxInt32
+	for _, num := range game {
+		n := r.FindAllString(num, -1)
+		nAsInt, err := strconv.Atoi(n[0])
+		if err != nil {
+			fmt.Println(err)
+		}
+		if nAsInt < min {
+			min = nAsInt
+		}
+	}
+	return min
+}
+
+func extractIDs(line string) int {
+	reID := regexp.MustCompile(`(\d*:)`)
+	digit := regexp.MustCompile(`\d*`)
+	id := reID.FindString(line)
+	id = digit.FindString(id)
+	if id != "" {
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return idInt
+	}
+	return 0
+}
+
+func getGameData(gameData []string) ([]int, ColorResultPerGame, ColorResultPerGame) {
 	reRed := regexp.MustCompile(redCountPat)
 	reGreen := regexp.MustCompile(greenCountPat)
 	reBlue := regexp.MustCompile(blueCountPat)
-	reID := regexp.MustCompile(`(\d*:)`)
 	digit := regexp.MustCompile(`\d*`)
 
-	var redCounts []int
-	var greenCounts []int
-	var blueCounts []int
+	var redCountsMax []int
+	var greenCountsMax []int
+	var blueCountsMax []int
+	var redCountsMin []int
+	var greenCountsMin []int
+	var blueCountsMin []int
 	var gameStructIDs []int
 
+	// generate ids string->int for structs
+	// (used for final answer generation)
 	for _, line := range gameData {
-		// n := fmt.Sprintf("%s", "game"+strconv.Itoa(i+1))
-		id := reID.FindString(line)
-		id = digit.FindString(id)
-		if id != "" {
-			idInt, err := strconv.Atoi(id)
-			if err != nil {
-				fmt.Println(err)
-			}
-			gameStructIDs = append(gameStructIDs, idInt)
+
+		id := extractIDs(line)
+		// a game id of 0 is a blank line in input game data
+		if id != 0 {
+			gameStructIDs = append(gameStructIDs, id)
 		}
 
 		// find color counts
 		redCountPerGame = reRed.FindAllString(line, -1)
-		greenCountPerGame := reGreen.FindAllString(line, -1)
-		blueCountPerGame := reBlue.FindAllString(line, -1)
+		greenCountPerGame = reGreen.FindAllString(line, -1)
+		blueCountPerGame = reBlue.FindAllString(line, -1)
 
-		// accumulate counts across all games
+		// accumulate max counts across all games per color
 		redMax := getLargestNumber(redCountPerGame, digit)
-		redCounts = append(redCounts, redMax)
+		redCountsMax = append(redCountsMax, redMax)
 
 		greenMax := getLargestNumber(greenCountPerGame, digit)
-		greenCounts = append(greenCounts, greenMax)
+		greenCountsMax = append(greenCountsMax, greenMax)
 
 		blueMax := getLargestNumber(blueCountPerGame, digit)
-		blueCounts = append(blueCounts, blueMax)
+		blueCountsMax = append(blueCountsMax, blueMax)
 
+		// accumulate min counts across all games per color
+		redMin := getSmallestNumber(redCountPerGame, digit)
+		redCountsMin = append(redCountsMin, redMin)
+
+		greenMin := getSmallestNumber(greenCountPerGame, digit)
+		greenCountsMin = append(greenCountsMin, greenMin)
+
+		blueMin := getSmallestNumber(blueCountPerGame, digit)
+		blueCountsMin = append(blueCountsMin, blueMin)
 	}
 
-	return gameStructIDs, redCounts, greenCounts, blueCounts
+    // fill and return structs instead of arrays to reduce ambiguity when accessing
+    // the correct values. e.g. Struct.green instead of array[1]
+	Max := ColorResultPerGame{redCountsMax, greenCountsMax, blueCountsMax}
+	Min := ColorResultPerGame{redCountsMin, greenCountsMin, blueCountsMin}
 
-	// source per line: id, total red, green and blue
-	// convert number strings to ints
-	// get sum of each color
-	// create struct with id, sum red, sum, green, sum blue
-
-}
-
-// filter and return games based on requirements
-// return the structs and their ids
-func filterGames(req []string) {
+	return gameStructIDs, Max, Min
 }

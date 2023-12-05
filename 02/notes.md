@@ -39,7 +39,7 @@ Add the ids of each game that would be possible given this requirement.
 - make a struct for a game
     - id (int)
     - red (int) - total cubes revealed for the game
-    - green (int) - //
+    - green (int) - /
     - blue (int) - //
 
 - iterate through the input and generate structs for each game
@@ -50,3 +50,10 @@ Add the ids of each game that would be possible given this requirement.
 
 - return the ids of the filtered games
 - sum the returned ids (ints)
+
+
+### Tactic Part 2
+
+- find the lowest number for each color in each game
+- multiply them together to derive a number (power) for that game
+- sum all end powers for all games together

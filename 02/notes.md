@@ -57,3 +57,33 @@ Add the ids of each game that would be possible given this requirement.
 - find the lowest number for each color in each game
 - multiply them together to derive a number (power) for that game
 - sum all end powers for all games together
+
+## Review
+
+Taking the time to note down the requirements made a huge difference in deriving
+and applying a solution tactic.
+
+Separation of concerns is of course the way to go and paid off big time when solving part 2.
+Taking the time to consider data structures most likely saved me from bugs due to ambituity.
+
+e.g.
+```go
+    // fill and return structs instead of arrays to reduce ambiguity when accessing
+    // the correct values. e.g. Struct.green instead of array[1]
+	Max := ColorResultPerGame{redCountsMax, greenCountsMax, blueCountsMax}
+	Min := ColorResultPerGame{redCountsMin, greenCountsMin, blueCountsMin}
+```
+
+then in main.go:
+
+```go
+	ids, countsMax, _ := getGameData(gameData)
+    // typically an array would be returned and 
+    // accessed as so `redMax := redCounts[0]`
+	redMax := countsMax.red
+	greenMax := countsMax.green
+	blueMax := countsMax.blue
+
+	partOne(ids, redMax, greenMax, blueMax)
+
+```

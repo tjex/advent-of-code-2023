@@ -8,6 +8,9 @@
 
 ## Tactic
 
+
+### 2d array
+
 - essentially we have a 2d grid.
 - part numbers that have a symbol on any cell surrounding them are a valid part number.
 - fill a 2d array with rowsN and colsN of the input
@@ -15,3 +18,19 @@
 - iterate through the neighbouring rows and cell +/- 1 of the same row and check if there are
   symbols
 - if true, the digit, is a valid part number.
+
+### 1d array
+
+- essentially we have a 2d grid.
+- part numbers that have a symbol on any cell surrounding them are a valid part number.
+- but do we need a 2d array?
+    - as before:
+    - fill an array with lines of input file
+    - find numbers and their indicie per row.
+    - iterate through the neighbouring rows and cell +/- 1 of the same row and check if there are
+      symbols
+    - if true, the digit, is a valid part number.
+
+## Review
+
+- clear your array within the for loop before appending again you twit!

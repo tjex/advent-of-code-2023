@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 )
 
 const numberPat = `(\d+)`
@@ -14,11 +15,12 @@ func main() {
 	inputData := extractInputData()
 	symbolIndicies := extractSymbolIndicies(inputData)
 	numberIndicies := extractNumberIndicies(inputData)
-	checkNumberBoundaries(inputData, symbolIndicies, numberIndicies)
+	answer := returnSumOfValidNumbers(inputData, symbolIndicies, numberIndicies)
+	fmt.Println(answer)
 }
 func extractInputData() []string {
 	var inputDataAsStringArray []string
-	file, err := os.Open("input.txt")
+	file, err := os.Open("input-test.txt")
 	if err != nil {
 		fmt.Println("file open error:", err)
 	}
@@ -68,18 +70,81 @@ func convertTo2DArray(a [][][]int) [][]int {
 
 }
 
-func printDataAtRange(row, rangeLeft, rangeRight int, inputData []string) {
+func printDataAtRange(row, rangeLeft, rangeRight int) {
+
+	inputData := extractInputData()
+	for i, line := range inputData {
+		if i == row-1 || i == row || i == row+1 {
+			fmt.Println(line[rangeLeft-1 : rangeRight+1])
+		}
+	}
+	fmt.Println("----------------")
+}
+
+func returnNumberAtRange(row, rangeLeft, rangeRight int, inputData []string) int {
 	for i, line := range inputData {
 		if i == row {
-			fmt.Println(line[rangeLeft:rangeRight])
+			// get the text at the given range
+			s := line[rangeLeft:rangeRight]
+			validNumber, err := strconv.Atoi(s)
+			if err != nil {
+				fmt.Println("in returnNumberAtRange():", err)
+			}
+			return validNumber
 		}
 
 	}
+	return 0
 
+}
+func doesSymbolSurroundNumberChat(rowToCheck, rangeLeft, rangeRight int, symData [][][]int) bool {
+	cellLeftOfNumber := rangeLeft - 1
+	cellRightOfNumber := rangeRight + 1
+
+	for i, line := range symData {
+		if i == rowToCheck {
+			// Check if symbol exists before or after the number
+			for _, row := range line {
+				if row[0] == cellLeftOfNumber || row[0] == cellRightOfNumber {
+					return true
+				}
+			}
+		}
+
+		// Check if symbol exists directly above or below the number
+		if i == rowToCheck-1 || i == rowToCheck+1 {
+			for _, row := range line {
+				if row[0] >= cellLeftOfNumber && row[0] <= cellRightOfNumber {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func doesSymbolSurroundNumber(rowToCheck, rangeLeft, rangeRight int, symData [][][]int) bool {
+	doesSurround := false
+	cellLeftofNumber := rangeLeft - 1
+	cellRightofNumber := rangeRight + 1
+	for i, line := range symData {
+		// check if symbol exists above number (including diagonals)
+		if i >= rowToCheck-1 || i <= rowToCheck+1 {
+			for _, row := range line {
+				if row[0] >= cellLeftofNumber && row[0] <= cellRightofNumber {
+					doesSurround = true
+					// fmt.Println("symbol above and/or below number")
+				}
+			}
+		}
+	}
+	return doesSurround
 }
 
 // check if symbol exists in any neighbouring cell to a number, and if so return the numer
-func checkNumberBoundaries(inputData []string, symData, numData [][][]int) {
+func returnSumOfValidNumbers(inputData []string, symData, numData [][][]int) int {
+	var sum int
 	// dataRows := len(numData)
 	// data arrays with different nRows will break this function
 	if (len(symData) - len(numData)) != 0 {
@@ -95,9 +160,15 @@ func checkNumberBoundaries(inputData []string, symData, numData [][][]int) {
 		for _, row := range line {
 			rangeLeft := row[0]
 			rangeRight := row[1]
-			fmt.Println(rangeLeft, rangeRight)
-			printDataAtRange(i, rangeLeft, rangeRight, inputData)
+			if doesSymbolSurroundNumberChat(i, rangeLeft, rangeRight, symData) {
+				printDataAtRange(i, rangeLeft, rangeRight)
+				validNumber := returnNumberAtRange(i, rangeLeft, rangeRight, inputData)
+				if validNumber != 0 {
+					sum += validNumber
+				}
+
+			}
 		}
 	}
-
+	return sum
 }

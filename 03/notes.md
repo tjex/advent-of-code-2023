@@ -34,3 +34,9 @@
 ## Review
 
 - clear your array within the for loop before appending again you twit!
+- learn to use a debugger more efficiently
+- what caused me the biggest issue was not considering that when using the index range of a found
+  number, that the end range already represented the cell that I should check until when searching
+  for a symbol on lines above and below. 
+    - This was hidden from me because my printDataAtRange() function was correctly printing the
+      range of text, but my function to actually check for symbols was incorrect.

@@ -10,17 +10,25 @@ import (
 
 const numberPat = `(\d+)`
 const symbolPat = `[^a-zA-Z0-9.]`
+var pTwoAnswer int
 
 func main() {
 	inputData := extractInputData()
-	symbolIndicies := extractSymbolIndicies(inputData)
-	numberIndicies := extractNumberIndicies(inputData)
-	answer := returnSumOfValidNumbers(inputData, symbolIndicies, numberIndicies)
-	fmt.Println(answer)
+	symData := extractSymbolIndicies(inputData)
+	numData := extractNumberIndicies(inputData)
+	pOneAnswer := returnSumOfValidNumbers(inputData, symData, numData)
+    gearRatios := findGearRatios(inputData, symData, numData)
+    for _, ratio := range gearRatios {
+        pTwoAnswer += ratio
+    }
+
+	fmt.Println("part one:", pOneAnswer)
+	fmt.Println("part two:", pTwoAnswer)
+
 }
 func extractInputData() []string {
 	var inputDataAsStringArray []string
-	file, err := os.Open("input-test.txt")
+	file, err := os.Open("input.txt")
 	if err != nil {
 		fmt.Println("file open error:", err)
 	}
@@ -58,18 +66,6 @@ func extractSymbolIndicies(inputData []string) [][][]int {
 
 }
 
-func convertTo2DArray(a [][][]int) [][]int {
-	var twoDarray [][]int
-	for _, line := range a {
-		for _, row := range line {
-			twoDarray = append(twoDarray, row)
-		}
-	}
-
-	return twoDarray
-
-}
-
 func printDataAtRange(row, rangeLeft, rangeRight int) {
 
 	inputData := extractInputData()
@@ -78,10 +74,10 @@ func printDataAtRange(row, rangeLeft, rangeRight int) {
 			fmt.Println(line[rangeLeft-1 : rangeRight+1])
 		}
 	}
-	fmt.Println("----------------")
 }
 
-func returnNumberAtRange(row, rangeLeft, rangeRight int, inputData []string) int {
+func returnNumberAtRange(row, rangeLeft, rangeRight int) int {
+	inputData := extractInputData()
 	for i, line := range inputData {
 		if i == row {
 			// get the text at the given range
@@ -97,49 +93,95 @@ func returnNumberAtRange(row, rangeLeft, rangeRight int, inputData []string) int
 	return 0
 
 }
-func doesSymbolSurroundNumberChat(rowToCheck, rangeLeft, rangeRight int, symData [][][]int) bool {
-	cellLeftOfNumber := rangeLeft - 1
-	cellRightOfNumber := rangeRight + 1
 
-	for i, line := range symData {
-		if i == rowToCheck {
-			// Check if symbol exists before or after the number
-			for _, row := range line {
-				if row[0] == cellLeftOfNumber || row[0] == cellRightOfNumber {
-					return true
-				}
+func doesRangeContainGear(row, rangeLeft, rangeRight int, inputData []string) bool {
+	for i, line := range inputData {
+		if i == row {
+			// get the text at the given range
+			s := line[rangeLeft:rangeRight]
+			matched, err := regexp.MatchString(`\*`, s)
+			if err != nil {
+				fmt.Println(err)
 			}
+			return matched
 		}
 
-		// Check if symbol exists directly above or below the number
-		if i == rowToCheck-1 || i == rowToCheck+1 {
-			for _, row := range line {
-				if row[0] >= cellLeftOfNumber && row[0] <= cellRightOfNumber {
-					return true
-				}
-			}
-		}
 	}
-
 	return false
 }
 
 func doesSymbolSurroundNumber(rowToCheck, rangeLeft, rangeRight int, symData [][][]int) bool {
-	doesSurround := false
+	// rangeRight is not extended by +1 because it is already
+	// the cell "to the right of the number" (due to an array's end range value being "up to but not
+	// including").
 	cellLeftofNumber := rangeLeft - 1
-	cellRightofNumber := rangeRight + 1
+	cellRightofNumber := rangeRight
 	for i, line := range symData {
 		// check if symbol exists above number (including diagonals)
 		if i >= rowToCheck-1 || i <= rowToCheck+1 {
 			for _, row := range line {
 				if row[0] >= cellLeftofNumber && row[0] <= cellRightofNumber {
-					doesSurround = true
+					return true
 					// fmt.Println("symbol above and/or below number")
 				}
 			}
 		}
 	}
-	return doesSurround
+	return false
+}
+
+func doNumbersSurroundGear(rowWithGear, gearCell int, numData [][][]int) (int, int) {
+	var numTop int
+	var numBot int
+	for i, line := range numData {
+		// only check lines above and below. Numbers next to gears are not valid
+		if i == rowWithGear-1 {
+
+			for _, row := range line {
+				leftBorder := row[0] - 1
+				rightBorder := row[1]
+				if gearCell >= leftBorder && gearCell <= rightBorder {
+					// fmt.Println(gearCell, line)
+					// fmt.Println("gear within number range")
+					// printDataAtRange(i, row[0], row[1])
+					numTop = returnNumberAtRange(i, row[0], row[1])
+				}
+			}
+
+		}
+		if i == rowWithGear+1 {
+			for _, row := range line {
+				leftBorder := row[0] - 1
+				rightBorder := row[1]
+				if gearCell >= leftBorder && gearCell <= rightBorder {
+					// fmt.Println(gearCell, line)
+					// fmt.Println("gear within number range")
+					// printDataAtRange(i, row[0], row[1])
+					numBot = returnNumberAtRange(i, row[0], row[1])
+				}
+			}
+		}
+	}
+
+    return numTop, numBot
+}
+
+// first find a gear, and then check for numbers around it
+func findGearRatios(inputData []string, symData, numData [][][]int) []int {
+    var gearRatioArray []int
+	for i, line := range symData {
+		for _, row := range line {
+			rangeLeft := row[0]
+			rangeRight := row[1]
+			if doesRangeContainGear(i, rangeLeft, rangeRight, inputData) {
+                numTop, numBot := doNumbersSurroundGear(i, rangeLeft, numData)
+                gearRatio := numTop * numBot
+                gearRatioArray = append(gearRatioArray, gearRatio)
+			}
+		}
+	}
+    return gearRatioArray
+
 }
 
 // check if symbol exists in any neighbouring cell to a number, and if so return the numer
@@ -160,9 +202,8 @@ func returnSumOfValidNumbers(inputData []string, symData, numData [][][]int) int
 		for _, row := range line {
 			rangeLeft := row[0]
 			rangeRight := row[1]
-			if doesSymbolSurroundNumberChat(i, rangeLeft, rangeRight, symData) {
-				printDataAtRange(i, rangeLeft, rangeRight)
-				validNumber := returnNumberAtRange(i, rangeLeft, rangeRight, inputData)
+			if doesSymbolSurroundNumber(i, rangeLeft, rangeRight, symData) {
+				validNumber := returnNumberAtRange(i, rangeLeft, rangeRight)
 				if validNumber != 0 {
 					sum += validNumber
 				}
